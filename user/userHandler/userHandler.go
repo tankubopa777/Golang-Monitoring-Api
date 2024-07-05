@@ -11,6 +11,12 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type ChangePasswordRequest struct {
+	Email          string `json:"email"`
+	CurrentPassword string `json:"currentPassword"`
+	NewPassword    string `json:"newPassword"`
+}
+
 func GetUsers(c echo.Context) error {
     users, err := userUsecase.GetAllUsers(userRepository.NewUserRepository())
     if err != nil {
@@ -33,7 +39,6 @@ func CreateUser(c echo.Context) error {
     return c.JSON(http.StatusCreated, user)
 }
 
-
 func Register(c echo.Context) error {
     var user userModel.User
     if err := c.Bind(&user); err != nil {
@@ -55,7 +60,6 @@ func Register(c echo.Context) error {
 
     return c.JSON(http.StatusCreated, user)
 }
-
 
 func Login(c echo.Context) error {
     var input userModel.User
@@ -80,4 +84,25 @@ func Login(c echo.Context) error {
     return c.JSON(http.StatusOK, echo.Map{
         "token": token,
     })
+}
+
+func ChangePassword(c echo.Context) error {
+	var req ChangePasswordRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	if req.Email == "" || req.CurrentPassword == "" || req.NewPassword == "" {
+		return c.JSON(http.StatusBadRequest, "Missing email, current password or new password")
+	}
+
+	err := userUsecase.ChangeUserPassword(userRepository.NewUserRepository(), req.Email, req.CurrentPassword, req.NewPassword)
+	if err != nil {
+		if err.Error() == "current password is incorrect" {
+			return c.JSON(http.StatusUnauthorized, err.Error()) // HTTP 401 Unauthorized
+		}
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.JSON(http.StatusOK, "Password changed successfully")
 }

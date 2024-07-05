@@ -45,3 +45,15 @@ func (r *UserRepository) SaveUser(user *userModel.User) error {
     return nil
 }
 
+func (r *UserRepository) UpdateUserPassword(email, newPassword string) error {
+    var user userModel.User
+    if result := r.db.Where("email = ?", email).First(&user); result.Error != nil {
+        return result.Error
+    }
+
+    user.Password = newPassword
+    if result := r.db.Save(&user); result.Error != nil {
+        return result.Error
+    }
+    return nil
+}

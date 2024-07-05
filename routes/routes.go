@@ -12,6 +12,7 @@ import (
 func RegisterRoutes(e *echo.Echo) {
     e.POST("/register", userHandler.Register)
     e.POST("/login", userHandler.Login)
+    e.POST("/change-password", userHandler.ChangePassword)
 
     e.GET("/users", userHandler.GetUsers, authMiddleware)
     e.POST("/users", userHandler.CreateUser, authMiddleware)
